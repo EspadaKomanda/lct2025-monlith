@@ -1,4 +1,5 @@
-using LctMonolith.Infrastructure.UnitOfWork;
+using LctMonolith.Database.UnitOfWork;
+using LctMonolith.Models;
 using LctMonolith.Services.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,7 @@ public class AnalyticsService : IAnalyticsService
     {
         var totalUsers = await _uow.Users.Query().CountAsync(ct);
         var totalMissions = await _uow.Missions.Query().CountAsync(ct);
-        var completedMissions = await _uow.UserMissions.Query(um => um.Status == Domain.Entities.MissionStatus.Completed).CountAsync(ct);
+        var completedMissions = await _uow.UserMissions.Query(um => um.Status == MissionStatus.Completed).CountAsync(ct);
         var totalArtifacts = await _uow.Artifacts.Query().CountAsync(ct);
         var totalStoreItems = await _uow.StoreItems.Query().CountAsync(ct);
         var totalExperience = await _uow.Users.Query().SumAsync(u => (long)u.Experience, ct);
@@ -31,4 +32,3 @@ public class AnalyticsService : IAnalyticsService
         };
     }
 }
-

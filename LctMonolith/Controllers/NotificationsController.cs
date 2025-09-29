@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using LctMonolith.Services;
+using LctMonolith.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

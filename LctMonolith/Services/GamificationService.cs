@@ -1,6 +1,7 @@
 using System.Linq;
-using LctMonolith.Domain.Entities;
-using LctMonolith.Infrastructure.UnitOfWork;
+using LctMonolith.Database.UnitOfWork;
+using LctMonolith.Models;
+using LctMonolith.Services.Contracts;
 using LctMonolith.Services.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;

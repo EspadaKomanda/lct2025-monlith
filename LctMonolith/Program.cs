@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using LctMonolith.Infrastructure.Data;
-using LctMonolith.Domain.Entities;
+using LctMonolith.Models; // replaced Domain.Entities
 using Microsoft.AspNetCore.Identity;
-using LctMonolith.Infrastructure.UnitOfWork;
 using LctMonolith.Application.Middleware;
 using LctMonolith.Services;
-using LctMonolith.Application.Options; // Added for JwtOptions
+using LctMonolith.Application.Options;
+using LctMonolith.Database.Data;
+using LctMonolith.Database.UnitOfWork;
+using LctMonolith.Services.Contracts; // Added for JwtOptions
 
 var builder = WebApplication.CreateBuilder(args);
 

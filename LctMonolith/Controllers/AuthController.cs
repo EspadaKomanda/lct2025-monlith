@@ -1,10 +1,13 @@
 using System.Security.Claims;
-using LctMonolith.Domain.Entities;
+using LctMonolith.Models;
 using LctMonolith.Services;
+using LctMonolith.Services.Contracts;
 using LctMonolith.Services.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using RefreshRequest = LctMonolith.Services.Models.RefreshRequest;
 
 namespace LctMonolith.Controllers;
 

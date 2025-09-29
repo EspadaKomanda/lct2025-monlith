@@ -1,8 +1,9 @@
-using LctMonolith.Domain.Entities;
-using LctMonolith.Infrastructure.UnitOfWork;
+using LctMonolith.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text.Json;
+using LctMonolith.Database.UnitOfWork;
+using LctMonolith.Services.Contracts;
 
 namespace LctMonolith.Services;
 
@@ -72,4 +73,3 @@ public class StoreService : IStoreService
         return inv;
     }
 }
-

@@ -1,10 +1,11 @@
-using LctMonolith.Domain.Entities;
-using LctMonolith.Infrastructure.UnitOfWork;
+using LctMonolith.Models;
 using LctMonolith.Services.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text.Json;
 using System.Linq;
+using LctMonolith.Database.UnitOfWork;
+using LctMonolith.Services.Contracts;
 
 namespace LctMonolith.Services;
 

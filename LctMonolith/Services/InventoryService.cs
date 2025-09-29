@@ -1,5 +1,6 @@
-using LctMonolith.Domain.Entities;
-using LctMonolith.Infrastructure.UnitOfWork;
+using LctMonolith.Database.UnitOfWork;
+using LctMonolith.Models;
+using LctMonolith.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace LctMonolith.Services;
@@ -32,4 +33,3 @@ public class InventoryService : IInventoryService
             .ToListAsync(ct);
     }
 }
-
