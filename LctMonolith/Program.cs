@@ -12,6 +12,7 @@ using LctMonolith.Application.Options;
 using LctMonolith.Database.Data;
 using LctMonolith.Database.UnitOfWork;
 using LctMonolith.Services.Contracts; // Added for JwtOptions
+using LctMonolith.Application.Extensions; // added
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,14 +91,14 @@ builder.Services.AddOpenApi();
 // Health checks
 builder.Services.AddHealthChecks();
 
-// UnitOfWork
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// Remove individual service registrations and replace with extension
+// builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// builder.Services.AddScoped<ITokenService, TokenService>();
+// builder.Services.AddScoped<IStoreService, StoreService>();
+// builder.Services.AddScoped<INotificationService, NotificationService>();
+// builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
-// Domain services
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IStoreService, StoreService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddApplicationServices(builder.Configuration);
 
 // CORS
 builder.Services.AddCors(p => p.AddDefaultPolicy(policy =>

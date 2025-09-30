@@ -12,5 +12,4 @@ public class CreateMissionModel
     public int ExperienceReward { get; set; }
     public int ManaReward { get; set; }
     public List<CompetencyRewardModel> CompetencyRewards { get; set; } = new();
-    public List<Guid> ArtifactRewardIds { get; set; } = new();
 }

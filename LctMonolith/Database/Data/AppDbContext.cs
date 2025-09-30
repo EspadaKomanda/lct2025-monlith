@@ -45,9 +45,23 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Notification> Notifications => Set<Notification>();
 
+    // Core profile / player chain
+    public DbSet<Player> Players => Set<Player>();
+    public DbSet<Profile> Profiles => Set<Profile>();
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+
+        // Player configuration
+        b.Entity<Player>()
+            .HasIndex(p => p.UserId)
+            .IsUnique();
+        b.Entity<Player>()
+            .HasOne<AppUser>()
+            .WithOne()
+            .HasForeignKey<Player>(p => p.UserId)
+            .IsRequired();
 
         // Rank configurations
         b.Entity<Rank>()
@@ -201,7 +215,6 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
         b.Entity<RefreshToken>().HasIndex(x => x.Token).IsUnique();
 
         // ---------- Performance indexes ----------
-        b.Entity<AppUser>().HasIndex(u => u.RankId);
         b.Entity<PlayerSkill>().HasIndex(ps => ps.SkillId);
         b.Entity<EventLog>().HasIndex(e => new { e.UserId, e.Type, e.CreatedAt });
         b.Entity<StoreItem>().HasIndex(i => i.IsActive);

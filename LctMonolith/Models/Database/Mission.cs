@@ -6,15 +6,14 @@ public class Mission
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public MissionCategory? MissionCategory { get; set; }
-    public long MissionCategoryId { get; set; }
+    public Guid MissionCategoryId { get; set; } // changed from long
     public Mission? ParentMission { get; set; }
-    public long ParentMissionId { get; set; }
+    public Guid? ParentMissionId { get; set; } // changed from long to nullable Guid
     public int ExpReward { get; set; }
     public int ManaReward { get; set; }
-  
     public Guid DialogueId { get; set; }
     public Dialogue? Dialogue { get; set; }
-    
+
     public ICollection<Mission> ChildMissions { get; set; } = new List<Mission>();
     public ICollection<PlayerMission> PlayerMissions { get; set; } = new List<PlayerMission>();
     public ICollection<MissionItemReward> MissionItemRewards { get; set; } = new List<MissionItemReward>();

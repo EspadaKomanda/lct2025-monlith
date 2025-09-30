@@ -10,6 +10,8 @@ namespace LctMonolith.Database.UnitOfWork;
 public interface IUnitOfWork
 {
     IGenericRepository<AppUser> Users { get; }
+    IGenericRepository<Player> Players { get; }
+    IGenericRepository<MissionCategory> MissionCategories { get; } // added
     IGenericRepository<Rank> Ranks { get; }
     IGenericRepository<RankMissionRule> RankMissionRules { get; }
     IGenericRepository<RankSkillRule> RankSkillRules { get; }
@@ -24,6 +26,12 @@ public interface IUnitOfWork
     IGenericRepository<EventLog> EventLogs { get; }
     IGenericRepository<RefreshToken> RefreshTokens { get; }
     IGenericRepository<Notification> Notifications { get; }
+    IGenericRepository<MissionItemReward> MissionItemRewards { get; } // added
+    IGenericRepository<MissionRankRule> MissionRankRules { get; } // added
+    IGenericRepository<Dialogue> Dialogues { get; }
+    IGenericRepository<DialogueMessage> DialogueMessages { get; }
+    IGenericRepository<DialogueMessageResponseOption> DialogueMessageResponseOptions { get; }
+    IGenericRepository<Profile> Profiles { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
     Task BeginTransactionAsync(CancellationToken ct = default);

@@ -1,4 +1,3 @@
-
 using LctMonolith.Database.Data;
 using LctMonolith.Database.Repositories;
 using LctMonolith.Models.Database;
@@ -35,6 +34,14 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     private IGenericRepository<EventLog>? _eventLogs;
     private IGenericRepository<RefreshToken>? _refreshTokens;
     private IGenericRepository<Notification>? _notifications;
+    private IGenericRepository<Player>? _players;
+    private IGenericRepository<MissionCategory>? _missionCategories;
+    private IGenericRepository<MissionItemReward>? _missionItemRewards;
+    private IGenericRepository<MissionRankRule>? _missionRankRules;
+    private IGenericRepository<Dialogue>? _dialogues;
+    private IGenericRepository<DialogueMessage>? _dialogueMessages;
+    private IGenericRepository<DialogueMessageResponseOption>? _dialogueMessageResponseOptions;
+    private IGenericRepository<Profile>? _profiles;
 
     public IGenericRepository<AppUser> Users => _users ??= new GenericRepository<AppUser>(_ctx);
     public IGenericRepository<Rank> Ranks => _ranks ??= new GenericRepository<Rank>(_ctx);
@@ -51,6 +58,14 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IGenericRepository<EventLog> EventLogs => _eventLogs ??= new GenericRepository<EventLog>(_ctx);
     public IGenericRepository<RefreshToken> RefreshTokens => _refreshTokens ??= new GenericRepository<RefreshToken>(_ctx);
     public IGenericRepository<Notification> Notifications => _notifications ??= new GenericRepository<Notification>(_ctx);
+    public IGenericRepository<Player> Players => _players ??= new GenericRepository<Player>(_ctx);
+    public IGenericRepository<MissionCategory> MissionCategories => _missionCategories ??= new GenericRepository<MissionCategory>(_ctx);
+    public IGenericRepository<MissionItemReward> MissionItemRewards => _missionItemRewards ??= new GenericRepository<MissionItemReward>(_ctx);
+    public IGenericRepository<MissionRankRule> MissionRankRules => _missionRankRules ??= new GenericRepository<MissionRankRule>(_ctx);
+    public IGenericRepository<Dialogue> Dialogues => _dialogues ??= new GenericRepository<Dialogue>(_ctx);
+    public IGenericRepository<DialogueMessage> DialogueMessages => _dialogueMessages ??= new GenericRepository<DialogueMessage>(_ctx);
+    public IGenericRepository<DialogueMessageResponseOption> DialogueMessageResponseOptions => _dialogueMessageResponseOptions ??= new GenericRepository<DialogueMessageResponseOption>(_ctx);
+    public IGenericRepository<Profile> Profiles => _profiles ??= new GenericRepository<Profile>(_ctx);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _ctx.SaveChangesAsync(ct);
 

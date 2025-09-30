@@ -10,6 +10,7 @@ using LctMonolith.Services.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 
 namespace LctMonolith.Services;
 
@@ -34,54 +35,78 @@ public class TokenService : ITokenService
 
     public async Task<TokenPair> IssueAsync(AppUser user, CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
-        var accessExp = now.AddMinutes(_options.AccessTokenMinutes);
-        var refreshExp = now.AddDays(_options.RefreshTokenDays);
-        var claims = new List<Claim>
+        try
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        };
-        var jwt = new JwtSecurityToken(
-            issuer: _options.Issuer,
-            audience: _options.Audience,
-            claims: claims,
-            notBefore: now,
-            expires: accessExp,
-            signingCredentials: _creds);
-        var accessToken = new JwtSecurityTokenHandler().WriteToken(jwt);
+            var now = DateTime.UtcNow;
+            var accessExp = now.AddMinutes(_options.AccessTokenMinutes);
+            var refreshExp = now.AddDays(_options.RefreshTokenDays);
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            };
+            var jwt = new JwtSecurityToken(
+                issuer: _options.Issuer,
+                audience: _options.Audience,
+                claims: claims,
+                notBefore: now,
+                expires: accessExp,
+                signingCredentials: _creds);
+            var accessToken = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-        var refreshToken = GenerateSecureToken();
-        var rt = new RefreshToken
+            var refreshToken = GenerateSecureToken();
+            var rt = new RefreshToken
+            {
+                Token = refreshToken,
+                UserId = user.Id,
+                ExpiresAt = refreshExp
+            };
+            await _uow.RefreshTokens.AddAsync(rt, ct);
+            await _uow.SaveChangesAsync(ct);
+            return new TokenPair(accessToken, accessExp, refreshToken, refreshExp);
+        }
+        catch (Exception ex)
         {
-            Token = refreshToken,
-            UserId = user.Id,
-            ExpiresAt = refreshExp
-        };
-        await _uow.RefreshTokens.AddAsync(rt, ct);
-        await _uow.SaveChangesAsync(ct);
-        return new TokenPair(accessToken, accessExp, refreshToken, refreshExp);
+            Log.Error(ex, "IssueAsync failed for user {UserId}", user.Id);
+            throw;
+        }
     }
 
     public async Task<TokenPair> RefreshAsync(string refreshToken, CancellationToken ct = default)
     {
-        var token = await _uow.RefreshTokens.Query(r => r.Token == refreshToken).FirstOrDefaultAsync(ct);
-        if (token == null || token.IsRevoked || token.ExpiresAt < DateTime.UtcNow)
-            throw new SecurityTokenException("Invalid refresh token");
-        var user = await _userManager.FindByIdAsync(token.UserId.ToString()) ?? throw new SecurityTokenException("User not found");
-        token.IsRevoked = true; // rotate
-        await _uow.SaveChangesAsync(ct);
-        return await IssueAsync(user, ct);
+        try
+        {
+            var token = await _uow.RefreshTokens.Query(r => r.Token == refreshToken).FirstOrDefaultAsync(ct);
+            if (token == null || token.IsRevoked || token.ExpiresAt < DateTime.UtcNow)
+                throw new SecurityTokenException("Invalid refresh token");
+            var user = await _userManager.FindByIdAsync(token.UserId.ToString()) ?? throw new SecurityTokenException("User not found");
+            token.IsRevoked = true; // rotate
+            await _uow.SaveChangesAsync(ct);
+            return await IssueAsync(user, ct);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "RefreshAsync failed");
+            throw;
+        }
     }
 
     public async Task RevokeAsync(string refreshToken, CancellationToken ct = default)
     {
-        var token = await _uow.RefreshTokens.Query(r => r.Token == refreshToken).FirstOrDefaultAsync(ct);
-        if (token == null) return; // idempotent
-        token.IsRevoked = true;
-        await _uow.SaveChangesAsync(ct);
+        try
+        {
+            var token = await _uow.RefreshTokens.Query(r => r.Token == refreshToken).FirstOrDefaultAsync(ct);
+            if (token == null) return; // idempotent
+            token.IsRevoked = true;
+            await _uow.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "RevokeAsync failed");
+            throw;
+        }
     }
 
     private static string GenerateSecureToken()
