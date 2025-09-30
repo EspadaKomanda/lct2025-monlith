@@ -1,7 +1,6 @@
-using System.Diagnostics;
 using LctMonolith.Database.Repositories;
-using LctMonolith.Models;
-using EventLog = LctMonolith.Models.EventLog;
+using LctMonolith.Models.Database;
+using EventLog = LctMonolith.Models.Database.EventLog;
 
 namespace LctMonolith.Database.UnitOfWork;
 
@@ -12,16 +11,13 @@ public interface IUnitOfWork
 {
     IGenericRepository<AppUser> Users { get; }
     IGenericRepository<Rank> Ranks { get; }
-    IGenericRepository<RankRequiredMission> RankRequiredMissions { get; }
-    IGenericRepository<RankRequiredCompetency> RankRequiredCompetencies { get; }
+    IGenericRepository<RankMissionRule> RankMissionRules { get; }
+    IGenericRepository<RankSkillRule> RankSkillRules { get; }
     IGenericRepository<Mission> Missions { get; }
-    IGenericRepository<UserMission> UserMissions { get; }
-    IGenericRepository<MissionCompetencyReward> MissionCompetencyRewards { get; }
-    IGenericRepository<MissionArtifactReward> MissionArtifactRewards { get; }
-    IGenericRepository<Competency> Competencies { get; }
-    IGenericRepository<UserCompetency> UserCompetencies { get; }
-    IGenericRepository<Artifact> Artifacts { get; }
-    IGenericRepository<UserArtifact> UserArtifacts { get; }
+    IGenericRepository<PlayerMission> PlayerMissions { get; }
+    IGenericRepository<MissionSkillReward> MissionSkillRewards { get; }
+    IGenericRepository<Skill> Skills { get; }
+    IGenericRepository<PlayerSkill> PlayerSkills { get; }
     IGenericRepository<StoreItem> StoreItems { get; }
     IGenericRepository<UserInventoryItem> UserInventoryItems { get; }
     IGenericRepository<Transaction> Transactions { get; }

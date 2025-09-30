@@ -1,4 +1,4 @@
-using LctMonolith.Models;
+using LctMonolith.Models.Database;
 
 namespace LctMonolith.Services.Models;
 

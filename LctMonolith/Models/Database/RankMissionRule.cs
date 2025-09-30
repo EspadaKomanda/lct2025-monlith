@@ -1,7 +1,8 @@
-namespace LctMonolith.Models;
+namespace LctMonolith.Models.Database;
 
-public class RankRequiredMission
+public class RankMissionRule
 {
+    public Guid Id { get; set; }
     public Guid RankId { get; set; }
     public Rank Rank { get; set; } = null!;
     public Guid MissionId { get; set; }

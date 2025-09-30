@@ -1,4 +1,4 @@
-using LctMonolith.Models;
+using LctMonolith.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 

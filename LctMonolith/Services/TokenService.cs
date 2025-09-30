@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using LctMonolith.Application.Options;
 using LctMonolith.Database.UnitOfWork;
-using LctMonolith.Models;
+using LctMonolith.Models.Database;
 using LctMonolith.Services.Contracts;
 using LctMonolith.Services.Models;
 using Microsoft.AspNetCore.Identity;

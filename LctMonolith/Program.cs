@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using LctMonolith.Models; // replaced Domain.Entities
+using LctMonolith.Models.Database; // replaced Domain.Entities
 using Microsoft.AspNetCore.Identity;
 using LctMonolith.Application.Middleware;
 using LctMonolith.Services;
@@ -95,7 +95,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Domain services
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IGamificationService, GamificationService>();
+builder.Services.AddScoped<IGamificationService, LctMonolith>();
 builder.Services.AddScoped<IMissionService, MissionService>();
 builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

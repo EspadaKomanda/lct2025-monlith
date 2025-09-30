@@ -1,6 +1,6 @@
 using System.Linq;
 using LctMonolith.Database.UnitOfWork;
-using LctMonolith.Models;
+using LctMonolith.Models.Database;
 using LctMonolith.Services.Contracts;
 using LctMonolith.Services.Models;
 using Microsoft.EntityFrameworkCore;

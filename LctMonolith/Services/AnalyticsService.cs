@@ -1,5 +1,5 @@
 using LctMonolith.Database.UnitOfWork;
-using LctMonolith.Models;
+using LctMonolith.Models.Database;
 using LctMonolith.Services.Models;
 using Microsoft.EntityFrameworkCore;
 

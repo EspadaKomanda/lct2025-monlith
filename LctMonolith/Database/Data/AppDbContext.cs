@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using LctMonolith.Models;
+using LctMonolith.Models.Database;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using EventLog = LctMonolith.Models.EventLog;
+using EventLog = LctMonolith.Models.Database.EventLog;
 
 namespace LctMonolith.Database.Data;
 

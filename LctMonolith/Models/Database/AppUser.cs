@@ -1,7 +1,6 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 
-namespace LctMonolith.Models;
+namespace LctMonolith.Models.Database;
 
 public class AppUser : IdentityUser<Guid>
 {

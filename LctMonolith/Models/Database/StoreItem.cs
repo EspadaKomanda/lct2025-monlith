@@ -1,4 +1,4 @@
-namespace LctMonolith.Models;
+namespace LctMonolith.Models.Database;
 
 public class StoreItem
 {

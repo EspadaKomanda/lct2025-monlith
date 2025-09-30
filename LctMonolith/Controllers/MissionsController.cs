@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using LctMonolith.Models;
+using LctMonolith.Models.Database;
 using LctMonolith.Services;
 using LctMonolith.Services.Contracts;
 using LctMonolith.Services.Models;
