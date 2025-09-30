@@ -1,7 +1,7 @@
 using LctMonolith.Models.Database;
 using LctMonolith.Models.DTO;
 
-namespace GamificationService.Services.Interfaces;
+namespace LctMonolith.Services.Interfaces;
 
 public interface IProgressTrackingService
 {

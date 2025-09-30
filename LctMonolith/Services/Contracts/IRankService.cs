@@ -1,6 +1,6 @@
 using LctMonolith.Models.Database;
 
-namespace GamificationService.Services.Interfaces;
+namespace LctMonolith.Services.Interfaces;
 
 public interface IRankService
 {
