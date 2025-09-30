@@ -18,21 +18,21 @@ public static class DbSeeder
         {
             var ranks = new List<Rank>
             {
-                new() { Name = "Искатель", Order = 0, RequiredExperience = 0 },
-                new() { Name = "Пилот-кандидат", Order = 1, RequiredExperience = 500 },
-                new() { Name = "Принятый в экипаж", Order = 2, RequiredExperience = 1500 }
+                new() { Title = "Искатель", ExpNeeded = 0 },
+                new() { Title = "Пилот-кандидат", ExpNeeded = 500 },
+                new() { Title = "Принятый в экипаж", ExpNeeded = 1500 }
             };
             db.Ranks.AddRange(ranks);
             Log.Information("Seeded {Count} ranks", ranks.Count);
         }
 
-        if (!await db.Competencies.AnyAsync(ct))
+        if (!await db.Skills.AnyAsync(ct))
         {
             var comps = new[]
             {
                 "Вера в дело","Стремление к большему","Общение","Аналитика","Командование","Юриспруденция","Трёхмерное мышление","Базовая экономика","Основы аэронавигации"
-            }.Select(n => new Competency { Name = n });
-            db.Competencies.AddRange(comps);
+            }.Select(n => new Skill { Title = n });
+            db.Skills.AddRange(comps);
             Log.Information("Seeded competencies");
         }
 

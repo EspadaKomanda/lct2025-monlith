@@ -17,16 +17,12 @@ public class AnalyticsService : IAnalyticsService
     {
         var totalUsers = await _uow.Users.Query().CountAsync(ct);
         var totalMissions = await _uow.Missions.Query().CountAsync(ct);
-        var completedMissions = await _uow.UserMissions.Query(um => um.Status == MissionStatus.Completed).CountAsync(ct);
-        var totalArtifacts = await _uow.Artifacts.Query().CountAsync(ct);
         var totalStoreItems = await _uow.StoreItems.Query().CountAsync(ct);
         var totalExperience = await _uow.Users.Query().SumAsync(u => (long)u.Experience, ct);
         return new AnalyticsSummary
         {
             TotalUsers = totalUsers,
             TotalMissions = totalMissions,
-            CompletedMissions = completedMissions,
-            TotalArtifacts = totalArtifacts,
             TotalStoreItems = totalStoreItems,
             TotalExperience = totalExperience
         };

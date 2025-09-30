@@ -95,11 +95,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Domain services
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IGamificationService, LctMonolith>();
-builder.Services.AddScoped<IMissionService, MissionService>();
 builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // CORS

@@ -1,7 +1,5 @@
 using LctMonolith.Services.Models;
 
-using LctMonolith.Services.Models;
-
 namespace LctMonolith.Services;
 
 public interface IAnalyticsService
