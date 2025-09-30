@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using LctMonolith.Models.Database;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -12,28 +11,36 @@ namespace LctMonolith.Database.Data;
 /// </summary>
 public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
 {
-
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    // Rank related entities
     public DbSet<Rank> Ranks => Set<Rank>();
-    public DbSet<RankRequiredMission> RankRequiredMissions => Set<RankRequiredMission>();
-    public DbSet<RankRequiredCompetency> RankRequiredCompetencies => Set<RankRequiredCompetency>();
+    public DbSet<RankMissionRule> RankMissionRules => Set<RankMissionRule>();
+    public DbSet<RankSkillRule> RankSkillRules => Set<RankSkillRule>();
 
+    // Mission related entities
+    public DbSet<MissionCategory> MissionCategories => Set<MissionCategory>();
     public DbSet<Mission> Missions => Set<Mission>();
-    public DbSet<UserMission> UserMissions => Set<UserMission>();
-    public DbSet<MissionCompetencyReward> MissionCompetencyRewards => Set<MissionCompetencyReward>();
-    public DbSet<MissionArtifactReward> MissionArtifactRewards => Set<MissionArtifactReward>();
+    public DbSet<PlayerMission> PlayerMissions => Set<PlayerMission>();
+    public DbSet<MissionSkillReward> MissionSkillRewards => Set<MissionSkillReward>();
+    public DbSet<MissionItemReward> MissionItemRewards => Set<MissionItemReward>();
+    public DbSet<MissionRankRule> MissionRankRules => Set<MissionRankRule>();
 
-    public DbSet<Competency> Competencies => Set<Competency>();
-    public DbSet<UserCompetency> UserCompetencies => Set<UserCompetency>();
+    // Skill related entities
+    public DbSet<Skill> Skills => Set<Skill>();
+    public DbSet<PlayerSkill> PlayerSkills => Set<PlayerSkill>();
 
-    public DbSet<Artifact> Artifacts => Set<Artifact>();
-    public DbSet<UserArtifact> UserArtifacts => Set<UserArtifact>();
+    // Dialogue related entities
+    public DbSet<Dialogue> Dialogues => Set<Dialogue>();
+    public DbSet<DialogueMessage> DialogueMessages => Set<DialogueMessage>();
+    public DbSet<DialogueMessageResponseOption> DialogueMessageResponseOptions => Set<DialogueMessageResponseOption>();
 
+    // Store and inventory
     public DbSet<StoreItem> StoreItems => Set<StoreItem>();
     public DbSet<UserInventoryItem> UserInventoryItems => Set<UserInventoryItem>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
 
+    // System entities
     public DbSet<EventLog> EventLogs => Set<EventLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -42,54 +49,160 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
     {
         base.OnModelCreating(b);
 
-        // Rank required mission composite key
-        b.Entity<RankRequiredMission>().HasKey(x => new { x.RankId, x.MissionId });
-        b.Entity<RankRequiredMission>()
-            .HasOne(x => x.Rank).WithMany(r => r.RequiredMissions).HasForeignKey(x => x.RankId);
-        b.Entity<RankRequiredMission>()
-            .HasOne(x => x.Mission).WithMany(m => m.RanksRequiring).HasForeignKey(x => x.MissionId);
+        // Rank configurations
+        b.Entity<Rank>()
+            .HasIndex(r => r.ExpNeeded)
+            .IsUnique();
+        b.Entity<Rank>()
+            .HasIndex(r => r.Title)
+            .IsUnique();
 
-        // Rank required competency composite key
-        b.Entity<RankRequiredCompetency>().HasKey(x => new { x.RankId, x.CompetencyId });
-        b.Entity<RankRequiredCompetency>()
-            .HasOne(x => x.Rank).WithMany(r => r.RequiredCompetencies).HasForeignKey(x => x.RankId);
-        b.Entity<RankRequiredCompetency>()
-            .HasOne(x => x.Competency).WithMany(c => c.RankRequirements).HasForeignKey(x => x.CompetencyId);
+        // Skill configurations
+        b.Entity<Skill>()
+            .HasIndex(s => s.Title)
+            .IsUnique();
 
-        // UserMission composite key
-        b.Entity<UserMission>().HasKey(x => new { x.UserId, x.MissionId });
-        b.Entity<UserMission>()
-            .HasOne(x => x.User).WithMany(u => u.Missions).HasForeignKey(x => x.UserId);
-        b.Entity<UserMission>()
-            .HasOne(x => x.Mission).WithMany(m => m.UserMissions).HasForeignKey(x => x.MissionId);
+        // MissionCategory configurations
+        b.Entity<MissionCategory>()
+            .HasIndex(mc => mc.Title)
+            .IsUnique();
 
-        // UserCompetency composite key
-        b.Entity<UserCompetency>().HasKey(x => new { x.UserId, x.CompetencyId });
-        b.Entity<UserCompetency>()
-            .HasOne(x => x.User).WithMany(u => u.Competencies).HasForeignKey(x => x.UserId);
-        b.Entity<UserCompetency>()
-            .HasOne(x => x.Competency).WithMany(c => c.UserCompetencies).HasForeignKey(x => x.CompetencyId);
+        // Mission configurations
+        b.Entity<Mission>()
+            .HasOne(m => m.MissionCategory)
+            .WithMany(mc => mc.Missions)
+            .HasForeignKey(m => m.MissionCategoryId)
+            .IsRequired();
+        b.Entity<Mission>()
+            .HasOne(m => m.ParentMission)
+            .WithMany(m => m.ChildMissions)
+            .HasForeignKey(m => m.ParentMissionId)
+            .IsRequired(false);
+        // Dialogue relationship for Mission
+        b.Entity<Mission>()
+            .HasOne(m => m.Dialogue)
+            .WithOne(d => d.Mission)
+            .HasForeignKey<Mission>(m => m.DialogueId)
+            .IsRequired(false);
 
-        // Mission competency reward composite key
-        b.Entity<MissionCompetencyReward>().HasKey(x => new { x.MissionId, x.CompetencyId });
+        // MissionRankRule configurations
+        b.Entity<MissionRankRule>()
+            .HasOne(mrr => mrr.Mission)
+            .WithMany(m => m.MissionRankRules)
+            .HasForeignKey(mrr => mrr.MissionId);
+        b.Entity<MissionRankRule>()
+            .HasOne(mrr => mrr.Rank)
+            .WithMany(r => r.MissionRankRules)
+            .HasForeignKey(mrr => mrr.RankId);
 
-        // Mission artifact reward composite key
-        b.Entity<MissionArtifactReward>().HasKey(x => new { x.MissionId, x.ArtifactId });
+        // MissionSkillReward configurations
+        b.Entity<MissionSkillReward>()
+            .HasKey(x => new { x.MissionId, x.SkillId });
+        b.Entity<MissionSkillReward>()
+            .HasOne(msr => msr.Mission)
+            .WithMany(m => m.MissionSkillRewards)
+            .HasForeignKey(msr => msr.MissionId);
+        b.Entity<MissionSkillReward>()
+            .HasOne(msr => msr.Skill)
+            .WithMany(s => s.MissionSkillRewards)
+            .HasForeignKey(msr => msr.SkillId);
 
-        // UserArtifact composite key
-        b.Entity<UserArtifact>().HasKey(x => new { x.UserId, x.ArtifactId });
+        // MissionItemReward configurations
+        b.Entity<MissionItemReward>()
+            .HasOne(mir => mir.Mission)
+            .WithMany(m => m.MissionItemRewards)
+            .HasForeignKey(mir => mir.MissionId);
 
-        // UserInventory composite key
-        b.Entity<UserInventoryItem>().HasKey(x => new { x.UserId, x.StoreItemId });
+        // RankMissionRule composite key
+        b.Entity<RankMissionRule>().HasKey(x => new { x.RankId, x.MissionId });
+        b.Entity<RankMissionRule>()
+            .HasOne(rmr => rmr.Rank)
+            .WithMany(r => r.RankMissionRules)
+            .HasForeignKey(rmr => rmr.RankId);
+        b.Entity<RankMissionRule>()
+            .HasOne(rmr => rmr.Mission)
+            .WithMany(m => m.RankMissionRules)
+            .HasForeignKey(rmr => rmr.MissionId);
+
+        // RankSkillRule composite key
+        b.Entity<RankSkillRule>().HasKey(x => new { x.RankId, x.SkillId });
+        b.Entity<RankSkillRule>()
+            .HasOne(rsr => rsr.Rank)
+            .WithMany(r => r.RankSkillRules)
+            .HasForeignKey(rsr => rsr.RankId);
+        b.Entity<RankSkillRule>()
+            .HasOne(rsr => rsr.Skill)
+            .WithMany(s => s.RankSkillRules)
+            .HasForeignKey(rsr => rsr.SkillId);
+
+        // PlayerSkill composite key
+        b.Entity<PlayerSkill>().HasKey(x => new { x.PlayerId, x.SkillId });
+        b.Entity<PlayerSkill>()
+            .HasOne(ps => ps.Player)
+            .WithMany(p => p.PlayerSkills)
+            .HasForeignKey(ps => ps.PlayerId);
+        b.Entity<PlayerSkill>()
+            .HasOne(ps => ps.Skill)
+            .WithMany(s => s.PlayerSkills)
+            .HasForeignKey(ps => ps.SkillId);
+
+        // PlayerMission composite key
+        b.Entity<PlayerMission>().HasKey(x => new { x.PlayerId, x.MissionId });
+        b.Entity<PlayerMission>()
+            .HasOne(pm => pm.Player)
+            .WithMany(p => p.PlayerMissions)
+            .HasForeignKey(pm => pm.PlayerId);
+        b.Entity<PlayerMission>()
+            .HasOne(pm => pm.Mission)
+            .WithMany(m => m.PlayerMissions)
+            .HasForeignKey(pm => pm.MissionId);
+
+        // Dialogue configurations
+        b.Entity<Dialogue>()
+            .HasOne(d => d.Mission)
+            .WithOne(m => m.Dialogue)
+            .HasForeignKey<Dialogue>(d => d.MissionId)
+            .IsRequired();
+
+        // DialogueMessage configurations
+        b.Entity<DialogueMessage>()
+            .HasOne(dm => dm.InitialDialogue)
+            .WithMany()
+            .HasForeignKey(dm => dm.InitialDialogueId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+        b.Entity<DialogueMessage>()
+            .HasOne(dm => dm.InterimDialogue)
+            .WithMany()
+            .HasForeignKey(dm => dm.InterimDialogueId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+        b.Entity<DialogueMessage>()
+            .HasOne(dm => dm.EndDialogue)
+            .WithMany()
+            .HasForeignKey(dm => dm.EndDialogueId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // DialogueMessageResponseOption configurations
+        b.Entity<DialogueMessageResponseOption>()
+            .HasOne(dmro => dmro.ParentDialogueMessage)
+            .WithMany(dm => dm.DialogueMessageResponseOptions)
+            .HasForeignKey(dmro => dmro.ParentDialogueMessageId)
+            .IsRequired();
+        b.Entity<DialogueMessageResponseOption>()
+            .HasOne(dmro => dmro.DestinationDialogueMessage)
+            .WithMany()
+            .HasForeignKey(dmro => dmro.DestinationDialogueMessageId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Refresh token index unique
         b.Entity<RefreshToken>().HasIndex(x => x.Token).IsUnique();
 
-        // ---------- Added performance indexes ----------
+        // ---------- Performance indexes ----------
         b.Entity<AppUser>().HasIndex(u => u.RankId);
-        b.Entity<Mission>().HasIndex(m => m.MinRankId);
-        b.Entity<UserMission>().HasIndex(um => new { um.UserId, um.Status });
-        b.Entity<UserCompetency>().HasIndex(uc => uc.CompetencyId); // for querying all users by competency
+        b.Entity<PlayerSkill>().HasIndex(ps => ps.SkillId);
         b.Entity<EventLog>().HasIndex(e => new { e.UserId, e.Type, e.CreatedAt });
         b.Entity<StoreItem>().HasIndex(i => i.IsActive);
         b.Entity<Transaction>().HasIndex(t => new { t.UserId, t.CreatedAt });
