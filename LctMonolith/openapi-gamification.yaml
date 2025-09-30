@@ -1,0 +1,927 @@
+﻿openapi: 3.0.3
+info:
+  title: LctMonolith Gamification API
+  version: 1.0.0
+  description: |
+    Comprehensive REST API for gamification module (players, missions, ranks, skills, rewards, dialogue, inventory, store, analytics, notifications, auth).
+    Authentication via JWT Bearer (Authorization: Bearer <token>). Admin endpoints require role=Admin.
+servers:
+  - url: https://localhost:5001
+    description: Local HTTPS
+  - url: http://localhost:5000
+    description: Local HTTP
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Players
+  - name: Ranks
+  - name: Skills
+  - name: MissionCategories
+  - name: Missions
+  - name: Rewards
+  - name: Dialogue
+  - name: Inventory
+  - name: Store
+  - name: Notifications
+  - name: Analytics
+  - name: Profile
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Id: { type: string, format: uuid }
+    TokenPair:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresAt: { type: string, format: date-time }
+        refreshExpiresAt: { type: string, format: date-time, nullable: true }
+    Rank:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        title: { type: string }
+        expNeeded: { type: integer }
+    Skill:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        title: { type: string }
+    Player:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        userId: { $ref: '#/components/schemas/Id' }
+        rankId: { $ref: '#/components/schemas/Id' }
+        experience: { type: integer }
+        mana: { type: integer }
+    PlayerSkill:
+      type: object
+      properties:
+        playerId: { $ref: '#/components/schemas/Id' }
+        skillId: { $ref: '#/components/schemas/Id' }
+        score: { type: integer }
+    Mission:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        title: { type: string }
+        description: { type: string }
+        missionCategoryId: { $ref: '#/components/schemas/Id' }
+        parentMissionId: { $ref: '#/components/schemas/Id', nullable: true }
+        expReward: { type: integer }
+        manaReward: { type: integer }
+    MissionSkillReward:
+      type: object
+      properties:
+        missionId: { $ref: '#/components/schemas/Id' }
+        skillId: { $ref: '#/components/schemas/Id' }
+        value: { type: integer }
+    MissionItemReward:
+      type: object
+      properties:
+        missionId: { $ref: '#/components/schemas/Id' }
+        itemId: { $ref: '#/components/schemas/Id' }
+    SkillProgress:
+      type: object
+      properties:
+        skillId: { $ref: '#/components/schemas/Id' }
+        skillTitle: { type: string }
+        previousLevel: { type: integer }
+        newLevel: { type: integer }
+    MissionCompletionResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        experienceGained: { type: integer }
+        manaGained: { type: integer }
+        skillsProgress: { type: array, items: { $ref: '#/components/schemas/SkillProgress' } }
+        unlockedMissions: { type: array, items: { $ref: '#/components/schemas/Id' } }
+    PlayerProgress:
+      type: object
+      properties:
+        playerId: { $ref: '#/components/schemas/Id' }
+        playerName: { type: string }
+        currentRank: { $ref: '#/components/schemas/Rank', nullable: true }
+        totalExperience: { type: integer }
+        totalMana: { type: integer }
+        completedMissions: { type: integer }
+        totalAvailableMissions: { type: integer }
+        skillLevels:
+          type: object
+          additionalProperties: { type: integer }
+    StoreItem:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        price: { type: integer }
+        isActive: { type: boolean }
+        stock: { type: integer, nullable: true }
+    UserInventoryItem:
+      type: object
+      properties:
+        userId: { $ref: '#/components/schemas/Id' }
+        storeItemId: { $ref: '#/components/schemas/Id' }
+        quantity: { type: integer }
+        acquiredAt: { type: string, format: date-time }
+    Notification:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        type: { type: string }
+        title: { type: string }
+        message: { type: string }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        readAt: { type: string, format: date-time, nullable: true }
+    AnalyticsSummary:
+      type: object
+      properties:
+        totalUsers: { type: integer }
+        totalMissions: { type: integer }
+        totalStoreItems: { type: integer }
+        totalExperience: { type: integer }
+        completedMissions: { type: integer }
+        generatedAtUtc: { type: string, format: date-time }
+    Profile:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        userId: { $ref: '#/components/schemas/Id' }
+        firstName: { type: string, nullable: true }
+        lastName: { type: string, nullable: true }
+        birthDate: { type: string, format: date, nullable: true }
+        about: { type: string, nullable: true }
+        location: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                firstName: { type: string }
+                lastName: { type: string }
+              required: [email,password]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TokenPair' } } } }
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+              required: [email,password]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TokenPair' } } } }
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+              required: [refreshToken]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TokenPair' } } } }
+  /api/auth/revoke:
+    post:
+      tags: [Auth]
+      security: [ { bearerAuth: [] } ]
+      summary: Revoke refresh token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '204': { description: No Content }
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      security: [ { bearerAuth: [] } ]
+      summary: Current user id
+      responses:
+        '200': { description: OK }
+  /api/analytics/summary:
+    get:
+      tags: [Analytics]
+      security: [ { bearerAuth: [] } ]
+      summary: Aggregated analytics summary
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AnalyticsSummary' } } } }
+  /api/players/{playerId}:
+    get:
+      tags: [Players]
+      security: [ { bearerAuth: [] } ]
+      summary: Get player by id
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: OK }
+        '404': { description: Not Found }
+  /api/players/{playerId}/progress:
+    get:
+      tags: [Players]
+      security: [ { bearerAuth: [] } ]
+      summary: Get player overall progress
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PlayerProgress' } } } }
+        '404': { description: Not Found }
+  /api/players/user/{userId}:
+    get:
+      tags: [Players]
+      security: [ { bearerAuth: [] } ]
+      summary: Get player by user id
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: OK }
+        '404': { description: Not Found }
+  /api/players:
+    post:
+      tags: [Players]
+      security: [ { bearerAuth: [] } ]
+      summary: Create player (Admin)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId: { $ref: '#/components/schemas/Id' }
+                username: { type: string }
+              required: [userId,username]
+      responses:
+        '201': { description: Created }
+      x-roles: [Admin]
+  /api/players/{playerId}/experience:
+    post:
+      tags: [Players]
+      security: [ { bearerAuth: [] } ]
+      summary: Adjust player experience (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value: { type: integer }
+              required: [value]
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: OK }
+      x-roles: [Admin]
+  /api/players/{playerId}/mana:
+    post:
+      tags: [Players]
+      security: [ { bearerAuth: [] } ]
+      summary: Adjust player mana (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value: { type: integer }
+              required: [value]
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: OK }
+      x-roles: [Admin]
+  /api/players/top:
+    get:
+      tags: [Players]
+      security: [ { bearerAuth: [] } ]
+      summary: Top players by experience
+      parameters:
+        - in: query
+          name: count
+          schema: { type: integer, default: 10 }
+      responses:
+        '200': { description: OK }
+  /api/ranks:
+    get:
+      tags: [Ranks]
+      security: [ { bearerAuth: [] } ]
+      summary: List ranks
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Ranks]
+      security: [ { bearerAuth: [] } ]
+      summary: Create rank (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                expNeeded: { type: integer }
+              required: [title,expNeeded]
+      responses: { '201': { description: Created } }
+      x-roles: [Admin]
+  /api/ranks/{id}:
+    get:
+      tags: [Ranks]
+      security: [ { bearerAuth: [] } ]
+      summary: Get rank
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+    put:
+      tags: [Ranks]
+      security: [ { bearerAuth: [] } ]
+      summary: Update rank (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                expNeeded: { type: integer }
+              required: [title,expNeeded]
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+      x-roles: [Admin]
+    delete:
+      tags: [Ranks]
+      security: [ { bearerAuth: [] } ]
+      summary: Delete rank (Admin)
+      responses: { '204': { description: No Content }, '404': { description: Not Found } }
+      x-roles: [Admin]
+  /api/ranks/validate-advance/{playerId}/{targetRankId}:
+    get:
+      tags: [Ranks]
+      security: [ { bearerAuth: [] } ]
+      summary: Validate advancement
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+        - in: path
+          name: targetRankId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/skills:
+    get:
+      tags: [Skills]
+      security: [ { bearerAuth: [] } ]
+      summary: List skills
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Skills]
+      security: [ { bearerAuth: [] } ]
+      summary: Create skill (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+              required: [title]
+      responses: { '201': { description: Created } }
+      x-roles: [Admin]
+  /api/skills/{id}:
+    get:
+      tags: [Skills]
+      security: [ { bearerAuth: [] } ]
+      summary: Get skill
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+    put:
+      tags: [Skills]
+      security: [ { bearerAuth: [] } ]
+      summary: Update skill (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+              required: [title]
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+      x-roles: [Admin]
+    delete:
+      tags: [Skills]
+      security: [ { bearerAuth: [] } ]
+      summary: Delete skill (Admin)
+      responses: { '204': { description: No Content }, '404': { description: Not Found } }
+      x-roles: [Admin]
+  /api/skills/player/{playerId}:
+    get:
+      tags: [Skills]
+      security: [ { bearerAuth: [] } ]
+      summary: List player skills
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/skills/player/{playerId}/{skillId}:
+    post:
+      tags: [Skills]
+      security: [ { bearerAuth: [] } ]
+      summary: Update player skill (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                level: { type: integer }
+              required: [level]
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+        - in: path
+          name: skillId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+      x-roles: [Admin]
+  /api/mission-categories:
+    get:
+      tags: [MissionCategories]
+      security: [ { bearerAuth: [] } ]
+      summary: List mission categories
+      responses: { '200': { description: OK } }
+    post:
+      tags: [MissionCategories]
+      security: [ { bearerAuth: [] } ]
+      summary: Create mission category (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+              required: [title]
+      responses: { '201': { description: Created } }
+      x-roles: [Admin]
+  /api/mission-categories/{id}:
+    get:
+      tags: [MissionCategories]
+      security: [ { bearerAuth: [] } ]
+      summary: Get mission category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+    put:
+      tags: [MissionCategories]
+      security: [ { bearerAuth: [] } ]
+      summary: Update mission category (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+              required: [title]
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+      x-roles: [Admin]
+    delete:
+      tags: [MissionCategories]
+      security: [ { bearerAuth: [] } ]
+      summary: Delete mission category (Admin)
+      responses: { '204': { description: No Content }, '404': { description: Not Found } }
+      x-roles: [Admin]
+  /api/missions/{id}:
+    get:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Get mission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+    put:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Update mission (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                missionCategoryId: { $ref: '#/components/schemas/Id' }
+                parentMissionId: { $ref: '#/components/schemas/Id', nullable: true }
+                expReward: { type: integer }
+                manaReward: { type: integer }
+              required: [title,missionCategoryId,expReward,manaReward]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+      x-roles: [Admin]
+    delete:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Delete mission (Admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '204': { description: No Content }, '404': { description: Not Found } }
+      x-roles: [Admin]
+  /api/missions/category/{categoryId}:
+    get:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Missions by category
+      parameters:
+        - in: path
+          name: categoryId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/missions/player/{playerId}/available:
+    get:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Available missions for player
+      parameters:
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/missions/{missionId}/rank-rules:
+    get:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Rank rules for mission
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/missions:
+    post:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Create mission (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                missionCategoryId: { $ref: '#/components/schemas/Id' }
+                parentMissionId: { $ref: '#/components/schemas/Id', nullable: true }
+                expReward: { type: integer }
+                manaReward: { type: integer }
+              required: [title,missionCategoryId,expReward,manaReward]
+      responses: { '201': { description: Created } }
+      x-roles: [Admin]
+  /api/missions/{id}:
+    put:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Update mission (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                missionCategoryId: { $ref: '#/components/schemas/Id' }
+                parentMissionId: { $ref: '#/components/schemas/Id', nullable: true }
+                expReward: { type: integer }
+                manaReward: { type: integer }
+              required: [title,missionCategoryId,expReward,manaReward]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+      x-roles: [Admin]
+    delete:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Delete mission (Admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '204': { description: No Content }, '404': { description: Not Found } }
+      x-roles: [Admin]
+  /api/missions/{missionId}/complete:
+    post:
+      tags: [Missions]
+      security: [ { bearerAuth: [] } ]
+      summary: Complete mission
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId: { $ref: '#/components/schemas/Id' }
+                proof: { nullable: true }
+              required: [playerId]
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/MissionCompletionResult' } } } }, '400': { description: Bad Request } }
+  /api/rewards/mission/{missionId}/skills:
+    get:
+      tags: [Rewards]
+      security: [ { bearerAuth: [] } ]
+      summary: Mission skill rewards
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/rewards/mission/{missionId}/items:
+    get:
+      tags: [Rewards]
+      security: [ { bearerAuth: [] } ]
+      summary: Mission item rewards
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/rewards/mission/{missionId}/can-claim/{playerId}:
+    get:
+      tags: [Rewards]
+      security: [ { bearerAuth: [] } ]
+      summary: Can claim mission rewards
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+        - in: path
+          name: playerId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/rewards/mission/{missionId}/claim:
+    post:
+      tags: [Rewards]
+      security: [ { bearerAuth: [] } ]
+      summary: Claim mission rewards
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId: { $ref: '#/components/schemas/Id' }
+              required: [playerId]
+      responses: { '200': { description: OK }, '409': { description: Conflict } }
+  /api/rewards/mission/{missionId}/force-distribute:
+    post:
+      tags: [Rewards]
+      security: [ { bearerAuth: [] } ]
+      summary: Force distribute mission rewards (Admin)
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerId: { $ref: '#/components/schemas/Id' }
+              required: [playerId]
+      responses: { '200': { description: OK } }
+      x-roles: [Admin]
+  /api/dialogue/mission/{missionId}:
+    get:
+      tags: [Dialogue]
+      security: [ { bearerAuth: [] } ]
+      summary: Get dialogue by mission
+      parameters:
+        - in: path
+          name: missionId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+  /api/dialogue/message/{messageId}:
+    get:
+      tags: [Dialogue]
+      security: [ { bearerAuth: [] } ]
+      summary: Get dialogue message
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK }, '404': { description: Not Found } }
+  /api/dialogue/message/{messageId}/options:
+    get:
+      tags: [Dialogue]
+      security: [ { bearerAuth: [] } ]
+      summary: Get dialogue response options
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses: { '200': { description: OK } }
+  /api/dialogue/message/{messageId}/respond:
+    post:
+      tags: [Dialogue]
+      security: [ { bearerAuth: [] } ]
+      summary: Respond to dialogue
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                responseOptionId: { $ref: '#/components/schemas/Id' }
+                playerId: { $ref: '#/components/schemas/Id' }
+              required: [responseOptionId,playerId]
+      responses: { '200': { description: OK } }
+  /api/dialogue:
+    post:
+      tags: [Dialogue]
+      security: [ { bearerAuth: [] } ]
+      summary: Create dialogue (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                missionId: { $ref: '#/components/schemas/Id' }
+                initialDialogueMessageId: { $ref: '#/components/schemas/Id' }
+                interimDialogueMessageId: { $ref: '#/components/schemas/Id' }
+                endDialogueMessageId: { $ref: '#/components/schemas/Id' }
+              required: [missionId,initialDialogueMessageId,interimDialogueMessageId,endDialogueMessageId]
+      responses: { '201': { description: Created } }
+      x-roles: [Admin]
+  /api/profile/me:
+    get:
+      tags: [Profile]
+      security: [ { bearerAuth: [] } ]
+      summary: Get current user profile
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Profile' } } } }
+        '404': { description: Not Found }
+  /api/profile/{userId}:
+    get:
+      tags: [Profile]
+      security: [ { bearerAuth: [] } ]
+      summary: Get profile by user id (Admin)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Profile' } } } }
+        '404': { description: Not Found }
+      x-roles: [Admin]
+  /api/profile:
+    put:
+      tags: [Profile]
+      security: [ { bearerAuth: [] } ]
+      summary: Upsert current user profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string, nullable: true }
+                lastName: { type: string, nullable: true }
+                birthDate: { type: string, format: date, nullable: true }
+                about: { type: string, nullable: true }
+                location: { type: string, nullable: true }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Profile' } } } }
+  /api/profile/avatar:
+    post:
+      tags: [Profile]
+      security: [ { bearerAuth: [] } ]
+      summary: Upload avatar image (multipart/form-data)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { avatarUrl: { type: string } } } } } }
+        '400': { description: Bad Request }
+    delete:
+      tags: [Profile]
+      security: [ { bearerAuth: [] } ]
+      summary: Delete avatar image
+      responses:
+        '204': { description: No Content }
+        '404': { description: Not Found }

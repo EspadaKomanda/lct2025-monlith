@@ -31,6 +31,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.0" />
         <!-- Updated to match transitive requirement (>=8.0.1) -->
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
+        <PackageReference Include="AWSSDK.S3" Version="3.7.400.6" />
     </ItemGroup>
 
     <ItemGroup>
