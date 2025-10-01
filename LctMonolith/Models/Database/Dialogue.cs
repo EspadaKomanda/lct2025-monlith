@@ -8,9 +8,9 @@ public class Dialogue
     public required Mission Mission { get; set; }
 
     public Guid InitialDialogueMessageId { get; set; }
-    public Dialogue? InitialDialogueMessage { get; set; }
+    public DialogueMessage? InitialDialogueMessage { get; set; }
     public Guid InterimDialogueMessageId { get; set; }
-    public Dialogue? InterimDialogueMessage { get; set; }
+    public DialogueMessage? InterimDialogueMessage { get; set; }
     public Guid EndDialogueMessageId { get; set; }
-    public Dialogue? EndDialogueMessage { get; set; }
+    public DialogueMessage? EndDialogueMessage { get; set; }
 }

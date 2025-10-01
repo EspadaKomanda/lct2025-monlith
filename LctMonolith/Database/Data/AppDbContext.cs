@@ -11,7 +11,9 @@ namespace LctMonolith.Database.Data;
 /// </summary>
 public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {
+        Database.EnsureCreated();
+    }
 
     // Rank related entities
     public DbSet<Rank> Ranks => Set<Rank>();
@@ -92,7 +94,7 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
             .WithMany(m => m.ChildMissions)
             .HasForeignKey(m => m.ParentMissionId)
             .IsRequired(false);
-        // Dialogue relationship for Mission
+        // Dialogue relationship for Mission (optional dialogue for a mission)
         b.Entity<Mission>()
             .HasOne(m => m.Dialogue)
             .WithOne(d => d.Mission)
@@ -171,31 +173,28 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
             .WithMany(m => m.PlayerMissions)
             .HasForeignKey(pm => pm.MissionId);
 
-        // Dialogue configurations
+        // Dialogue configurations (Mission required for Dialogue)
         b.Entity<Dialogue>()
             .HasOne(d => d.Mission)
             .WithOne(m => m.Dialogue)
             .HasForeignKey<Dialogue>(d => d.MissionId)
             .IsRequired();
 
-        // DialogueMessage configurations
-        b.Entity<DialogueMessage>()
-            .HasOne(dm => dm.InitialDialogue)
+        // Dialogue -> DialogueMessage relationships (three distinct message slots)
+        b.Entity<Dialogue>()
+            .HasOne(d => d.InitialDialogueMessage)
             .WithMany()
-            .HasForeignKey(dm => dm.InitialDialogueId)
-            .IsRequired(false)
+            .HasForeignKey(d => d.InitialDialogueMessageId)
             .OnDelete(DeleteBehavior.Restrict);
-        b.Entity<DialogueMessage>()
-            .HasOne(dm => dm.InterimDialogue)
+        b.Entity<Dialogue>()
+            .HasOne(d => d.InterimDialogueMessage)
             .WithMany()
-            .HasForeignKey(dm => dm.InterimDialogueId)
-            .IsRequired(false)
+            .HasForeignKey(d => d.InterimDialogueMessageId)
             .OnDelete(DeleteBehavior.Restrict);
-        b.Entity<DialogueMessage>()
-            .HasOne(dm => dm.EndDialogue)
+        b.Entity<Dialogue>()
+            .HasOne(d => d.EndDialogueMessage)
             .WithMany()
-            .HasForeignKey(dm => dm.EndDialogueId)
-            .IsRequired(false)
+            .HasForeignKey(d => d.EndDialogueMessageId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // DialogueMessageResponseOption configurations
@@ -210,6 +209,18 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
             .HasForeignKey(dmro => dmro.DestinationDialogueMessageId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // UserInventoryItem composite key & relationships
+        b.Entity<UserInventoryItem>()
+            .HasKey(ui => new { ui.UserId, ui.StoreItemId });
+        b.Entity<UserInventoryItem>()
+            .HasOne(ui => ui.User)
+            .WithMany(u => u.Inventory)
+            .HasForeignKey(ui => ui.UserId);
+        b.Entity<UserInventoryItem>()
+            .HasOne(ui => ui.StoreItem)
+            .WithMany(si => si.UserInventory)
+            .HasForeignKey(ui => ui.StoreItemId);
 
         // Refresh token index unique
         b.Entity<RefreshToken>().HasIndex(x => x.Token).IsUnique();

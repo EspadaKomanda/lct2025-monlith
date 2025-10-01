@@ -16,12 +16,5 @@ public class DialogueMessage
     public bool AllowMessageAi { get; set; }
     public string MessageAiButtonText { get; set; } = string.Empty;
 
-    public Guid InitialDialogueId { get; set; }
-    public Dialogue? InitialDialogue { get; set; }
-    public Guid InterimDialogueId { get; set; }
-    public Dialogue? InterimDialogue { get; set; }
-    public Guid EndDialogueId { get; set; }
-    public Dialogue? EndDialogue { get; set; }
-
     public ICollection<DialogueMessageResponseOption> DialogueMessageResponseOptions = new List<DialogueMessageResponseOption>();
 }
