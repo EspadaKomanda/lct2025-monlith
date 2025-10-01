@@ -23,8 +23,12 @@ public class MissionsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id)
     {
-        var m = await _missions.GetMissionByIdAsync(id);
-        return m == null ? NotFound() : Ok(m);
+        var mission = await _missions.GetMissionByIdAsync(id);
+        if (mission == null)
+        {
+            return NotFound();
+        }
+        return Ok(mission);
     }
 
     [HttpGet("category/{categoryId:guid}")]
@@ -80,7 +84,10 @@ public class MissionsController : ControllerBase
     public async Task<IActionResult> Update(Guid id, CreateMissionRequest dto)
     {
         var existing = await _missions.GetMissionByIdAsync(id);
-        if (existing == null) return NotFound();
+        if (existing == null)
+        {
+            return NotFound();
+        }
         existing.Title = dto.Title;
         existing.Description = dto.Description ?? string.Empty;
         existing.MissionCategoryId = dto.MissionCategoryId;
@@ -95,8 +102,12 @@ public class MissionsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await _missions.DeleteMissionAsync(id);
-        return ok ? NoContent() : NotFound();
+        var removed = await _missions.DeleteMissionAsync(id);
+        if (!removed)
+        {
+            return NotFound();
+        }
+        return NoContent();
     }
 
     public record CompleteMissionRequest(Guid PlayerId, object? Proof);
@@ -105,8 +116,10 @@ public class MissionsController : ControllerBase
     public async Task<IActionResult> Complete(Guid missionId, CompleteMissionRequest r)
     {
         var result = await _missions.CompleteMissionAsync(missionId, r.PlayerId, r.Proof);
-        if (!result.Success) return BadRequest(result);
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
         return Ok(result);
     }
 }
-

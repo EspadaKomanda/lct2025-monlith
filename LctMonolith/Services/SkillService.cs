@@ -9,7 +9,7 @@ namespace LctMonolith.Services;
 public class SkillService : ISkillService
 {
     private readonly IUnitOfWork _uow;
-    public SkillService(IUnitOfWork uow) => _uow = uow;
+    public SkillService(IUnitOfWork uow) { _uow = uow; }
 
     public async Task<Skill?> GetSkillByIdAsync(Guid skillId)
     {
@@ -38,7 +38,7 @@ public class SkillService : ISkillService
     }
     public async Task<bool> DeleteSkillAsync(Guid skillId)
     {
-        try { var skill = await _uow.Skills.GetByIdAsync(skillId); if (skill == null) return false; _uow.Skills.Remove(skill); await _uow.SaveChangesAsync(); return true; }
+        try { var skill = await _uow.Skills.GetByIdAsync(skillId); if (skill == null) { return false; } _uow.Skills.Remove(skill); await _uow.SaveChangesAsync(); return true; }
         catch (Exception ex) { Log.Error(ex, "DeleteSkillAsync failed {SkillId}", skillId); throw; }
     }
     public async Task<PlayerSkill> UpdatePlayerSkillAsync(Guid playerId, Guid skillId, int level)

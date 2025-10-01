@@ -7,9 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LctMonolith.Controllers;
 
-/// <summary>
-/// Store endpoints for listing items and purchasing.
-/// </summary>
 [ApiController]
 [Route("api/store")]
 [Authorize]
@@ -22,9 +19,11 @@ public class StoreController : ControllerBase
         _storeService = storeService;
     }
 
-    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId()
+    {
+        return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
 
-    /// <summary>List active store items.</summary>
     [HttpGet("items")]
     public async Task<IActionResult> GetItems(CancellationToken ct)
     {
@@ -32,7 +31,6 @@ public class StoreController : ControllerBase
         return Ok(items);
     }
 
-    /// <summary>Purchase an item for the authenticated user.</summary>
     [HttpPost("purchase")]
     public async Task<IActionResult> Purchase(PurchaseRequest req, CancellationToken ct)
     {
@@ -40,4 +38,3 @@ public class StoreController : ControllerBase
         return Ok(new { inv.StoreItemId, inv.Quantity, inv.AcquiredAt });
     }
 }
-

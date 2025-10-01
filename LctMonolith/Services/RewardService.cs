@@ -9,18 +9,36 @@ namespace LctMonolith.Services;
 public class RewardService : IRewardService
 {
     private readonly IUnitOfWork _uow;
-    public RewardService(IUnitOfWork uow) => _uow = uow;
+
+    public RewardService(IUnitOfWork uow)
+    {
+        _uow = uow;
+    }
 
     public async Task<IEnumerable<MissionSkillReward>> GetMissionSkillRewardsAsync(Guid missionId)
     {
-        try { return await _uow.MissionSkillRewards.Query(r => r.MissionId == missionId, null, r => r.Skill).ToListAsync(); }
-        catch (Exception ex) { Log.Error(ex, "GetMissionSkillRewardsAsync failed {MissionId}", missionId); throw; }
+        try
+        {
+            return await _uow.MissionSkillRewards.Query(r => r.MissionId == missionId, null, r => r.Skill).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "GetMissionSkillRewardsAsync failed {MissionId}", missionId);
+            throw;
+        }
     }
 
     public async Task<IEnumerable<MissionItemReward>> GetMissionItemRewardsAsync(Guid missionId)
     {
-        try { return await _uow.MissionItemRewards.Query(r => r.MissionId == missionId).ToListAsync(); }
-        catch (Exception ex) { Log.Error(ex, "GetMissionItemRewardsAsync failed {MissionId}", missionId); throw; }
+        try
+        {
+            return await _uow.MissionItemRewards.Query(r => r.MissionId == missionId).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "GetMissionItemRewardsAsync failed {MissionId}", missionId);
+            throw;
+        }
     }
 
     public async Task DistributeMissionRewardsAsync(Guid missionId, Guid playerId)
@@ -33,7 +51,6 @@ public class RewardService : IRewardService
             player.Experience += mission.ExpReward;
             player.Mana += mission.ManaReward;
 
-            // Skill rewards
             var skillRewards = await _uow.MissionSkillRewards.Query(r => r.MissionId == missionId).ToListAsync();
             foreach (var sr in skillRewards)
             {
@@ -50,7 +67,6 @@ public class RewardService : IRewardService
                 }
             }
 
-            // Item rewards (store items) one each
             var itemRewards = await _uow.MissionItemRewards.Query(r => r.MissionId == missionId).ToListAsync();
             foreach (var ir in itemRewards)
             {
@@ -60,10 +76,12 @@ public class RewardService : IRewardService
                     inv = new UserInventoryItem { UserId = player.UserId, StoreItemId = ir.ItemId, Quantity = 1, AcquiredAt = DateTime.UtcNow };
                     await _uow.UserInventoryItems.AddAsync(inv);
                 }
-                else inv.Quantity += 1;
+                else
+                {
+                    inv.Quantity += 1;
+                }
             }
 
-            // Mark redeemed
             var pm = await _uow.PlayerMissions.Query(pm => pm.PlayerId == playerId && pm.MissionId == missionId).FirstOrDefaultAsync();
             if (pm != null && pm.RewardsRedeemed == null)
             {
@@ -82,11 +100,17 @@ public class RewardService : IRewardService
     {
         try
         {
-            // Interpret rewardId as missionId; claim if mission completed and rewards not yet redeemed
             var pm = await _uow.PlayerMissions.Query(pm => pm.PlayerId == playerId && pm.MissionId == rewardId).FirstOrDefaultAsync();
-            if (pm == null || pm.Completed == null) return false;
+            if (pm == null || pm.Completed == null)
+            {
+                return false;
+            }
             return pm.RewardsRedeemed == null;
         }
-        catch (Exception ex) { Log.Error(ex, "CanClaimRewardAsync failed {RewardId} {PlayerId}", rewardId, playerId); throw; }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "CanClaimRewardAsync failed {RewardId} {PlayerId}", rewardId, playerId);
+            throw;
+        }
     }
 }

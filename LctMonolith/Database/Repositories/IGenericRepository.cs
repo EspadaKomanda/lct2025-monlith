@@ -2,9 +2,6 @@ using System.Linq.Expressions;
 
 namespace LctMonolith.Database.Repositories;
 
-/// <summary>
-/// Generic repository abstraction for aggregate root / entity access. Read operations return IQueryable for composition.
-/// </summary>
 public interface IGenericRepository<TEntity> where TEntity : class
 {
     IQueryable<TEntity> Query(
@@ -22,4 +19,3 @@ public interface IGenericRepository<TEntity> where TEntity : class
     void Remove(TEntity entity);
     Task RemoveByIdAsync(object id, CancellationToken ct = default);
 }
-

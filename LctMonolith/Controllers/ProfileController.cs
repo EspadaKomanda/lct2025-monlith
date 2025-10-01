@@ -12,9 +12,16 @@ namespace LctMonolith.Controllers;
 public class ProfileController : ControllerBase
 {
     private readonly IProfileService _profiles;
-    public ProfileController(IProfileService profiles) => _profiles = profiles;
 
-    private Guid CurrentUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    public ProfileController(IProfileService profiles)
+    {
+        _profiles = profiles;
+    }
+
+    private Guid CurrentUserId()
+    {
+        return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
 
     public class UpdateProfileDto
     {
@@ -28,40 +35,54 @@ public class ProfileController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetMe(CancellationToken ct)
     {
-        var p = await _profiles.GetByUserIdAsync(CurrentUserId(), ct);
-        if (p == null) return NotFound();
-        return Ok(p);
+        var profile = await _profiles.GetByUserIdAsync(CurrentUserId(), ct);
+        if (profile == null)
+        {
+            return NotFound();
+        }
+        return Ok(profile);
     }
 
     [HttpGet("{userId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetByUser(Guid userId, CancellationToken ct)
     {
-        var p = await _profiles.GetByUserIdAsync(userId, ct);
-        return p == null ? NotFound() : Ok(p);
+        var profile = await _profiles.GetByUserIdAsync(userId, ct);
+        if (profile == null)
+        {
+            return NotFound();
+        }
+        return Ok(profile);
     }
 
     [HttpPut]
     public async Task<IActionResult> Upsert(UpdateProfileDto dto, CancellationToken ct)
     {
-        var p = await _profiles.UpsertAsync(CurrentUserId(), dto.FirstName, dto.LastName, dto.BirthDate, dto.About, dto.Location, ct);
-        return Ok(p);
+        var profile = await _profiles.UpsertAsync(CurrentUserId(), dto.FirstName, dto.LastName, dto.BirthDate, dto.About, dto.Location, ct);
+        return Ok(profile);
     }
 
     [HttpPost("avatar")]
-    [RequestSizeLimit(7_000_000)] // ~7MB
+    [RequestSizeLimit(7_000_000)]
     public async Task<IActionResult> UploadAvatar(IFormFile file, CancellationToken ct)
     {
-        if (file == null || file.Length == 0) return BadRequest("File required");
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("File required");
+        }
         await using var stream = file.OpenReadStream();
-        var p = await _profiles.UpdateAvatarAsync(CurrentUserId(), stream, file.ContentType, file.FileName, ct);
-        return Ok(new { p.AvatarUrl });
+        var profile = await _profiles.UpdateAvatarAsync(CurrentUserId(), stream, file.ContentType, file.FileName, ct);
+        return Ok(new { profile.AvatarUrl });
     }
 
     [HttpDelete("avatar")]
     public async Task<IActionResult> DeleteAvatar(CancellationToken ct)
     {
-        var ok = await _profiles.DeleteAvatarAsync(CurrentUserId(), ct);
-        return ok ? NoContent() : NotFound();
+        var removed = await _profiles.DeleteAvatarAsync(CurrentUserId(), ct);
+        if (!removed)
+        {
+            return NotFound();
+        }
+        return NoContent();
     }
 }

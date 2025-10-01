@@ -1,8 +1,5 @@
 namespace LctMonolith.Application.Options;
 
-/// <summary>
-/// JWT issuing configuration loaded from appsettings (section Jwt).
-/// </summary>
 public class JwtOptions
 {
     public string Key { get; set; } = string.Empty;
@@ -11,4 +8,3 @@ public class JwtOptions
     public int AccessTokenMinutes { get; set; } = 60;
     public int RefreshTokenDays { get; set; } = 7;
 }
-

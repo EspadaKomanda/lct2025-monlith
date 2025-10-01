@@ -12,7 +12,11 @@ namespace LctMonolith.Controllers;
 public class MissionCategoriesController : ControllerBase
 {
     private readonly IMissionCategoryService _service;
-    public MissionCategoriesController(IMissionCategoryService service) => _service = service;
+
+    public MissionCategoriesController(IMissionCategoryService service)
+    {
+        _service = service;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
@@ -24,35 +28,45 @@ public class MissionCategoriesController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id)
     {
-        var c = await _service.GetCategoryByIdAsync(id);
-        return c == null ? NotFound() : Ok(c);
+        var category = await _service.GetCategoryByIdAsync(id);
+        if (category == null)
+        {
+            return NotFound();
+        }
+        return Ok(category);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(CreateMissionCategoryDto dto)
     {
-        var c = await _service.CreateCategoryAsync(new MissionCategory { Title = dto.Title });
-        return CreatedAtAction(nameof(Get), new { id = c.Id }, c);
+        var created = await _service.CreateCategoryAsync(new MissionCategory { Title = dto.Title });
+        return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, CreateMissionCategoryDto dto)
     {
-        var c = await _service.GetCategoryByIdAsync(id);
-        if (c == null) return NotFound();
-        c.Title = dto.Title;
-        await _service.UpdateCategoryAsync(c);
-        return Ok(c);
+        var existing = await _service.GetCategoryByIdAsync(id);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+        existing.Title = dto.Title;
+        await _service.UpdateCategoryAsync(existing);
+        return Ok(existing);
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await _service.DeleteCategoryAsync(id);
-        return ok ? NoContent() : NotFound();
+        var removed = await _service.DeleteCategoryAsync(id);
+        if (!removed)
+        {
+            return NotFound();
+        }
+        return NoContent();
     }
 }
-

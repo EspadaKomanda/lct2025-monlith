@@ -4,26 +4,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using LctMonolith.Models.Database; // replaced Domain.Entities
+using LctMonolith.Models.Database;
 using Microsoft.AspNetCore.Identity;
 using LctMonolith.Application.Middleware;
 using LctMonolith.Services;
 using LctMonolith.Application.Options;
 using LctMonolith.Database.Data;
 using LctMonolith.Database.UnitOfWork;
-using LctMonolith.Services.Contracts; // Added for JwtOptions
-using LctMonolith.Application.Extensions; // added
+using LctMonolith.Services.Contracts;
+using LctMonolith.Application.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog configuration
 builder.Host.UseSerilog((ctx, services, loggerConfig) =>
     loggerConfig
         .ReadFrom.Configuration(ctx.Configuration)
         .Enrich.FromLogContext()
         .Enrich.WithProperty("Application", "LctMonolith"));
 
-// Configuration values
 var connectionString = builder.Configuration.GetConnectionString("Default") ?? "Host=localhost;Port=5432;Database=lct2025;Username=postgres;Password=postgres";
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSection["Key"] ?? "Dev_Insecure_Key_Change_Me";
@@ -42,11 +40,9 @@ builder.Services.Configure<JwtOptions>(o =>
     o.RefreshTokenDays = refreshDays;
 });
 
-// DbContext
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseNpgsql(connectionString));
 
-// Identity Core
 builder.Services.AddIdentityCore<AppUser>(options =>
     {
         options.Password.RequireDigit = false;
@@ -60,7 +56,6 @@ builder.Services.AddIdentityCore<AppUser>(options =>
     .AddSignInManager<SignInManager<AppUser>>()
     .AddDefaultTokenProviders();
 
-// Authentication & JWT
 builder.Services.AddAuthentication(o =>
     {
         o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -81,37 +76,18 @@ builder.Services.AddAuthentication(o =>
         };
     });
 
-// Controllers + NewtonsoftJson
-builder.Services.AddControllers()
-    .AddNewtonsoftJson();
+builder.Services.AddControllers().AddNewtonsoftJson();
 
-// OpenAPI
 builder.Services.AddOpenApi();
 
-// Health checks
 builder.Services.AddHealthChecks();
-
-// Remove individual service registrations and replace with extension
-// builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-// builder.Services.AddScoped<ITokenService, TokenService>();
-// builder.Services.AddScoped<IStoreService, StoreService>();
-// builder.Services.AddScoped<INotificationService, NotificationService>();
-// builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 builder.Services.AddApplicationServices(builder.Configuration);
 
-// CORS
 builder.Services.AddCors(p => p.AddDefaultPolicy(policy =>
     policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()));
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-    await DbSeeder.SeedAsync(db); // seed dev data
-}
 
 app.UseSerilogRequestLogging();
 

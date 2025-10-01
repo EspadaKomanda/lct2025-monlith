@@ -18,47 +18,54 @@ public class PlayersController : ControllerBase
         _progressService = progressService;
     }
 
-    [HttpGet("{playerId:guid}")] 
+    [HttpGet("{playerId:guid}")]
     public async Task<IActionResult> GetPlayer(Guid playerId)
     {
         var player = await _playerService.GetPlayerWithProgressAsync(playerId);
         return Ok(player);
     }
 
-    [HttpGet("user/{userId:guid}")] 
+    [HttpGet("user/{userId:guid}")]
     public async Task<IActionResult> GetByUser(Guid userId)
     {
-        var p = await _playerService.GetPlayerByUserIdAsync(userId.ToString());
-        if (p == null) return NotFound();
-        return Ok(p);
+        var player = await _playerService.GetPlayerByUserIdAsync(userId.ToString());
+        if (player == null)
+        {
+            return NotFound();
+        }
+        return Ok(player);
     }
 
-    public class CreatePlayerRequest { public Guid UserId { get; set; } public string Username { get; set; } = string.Empty; }
+    public class CreatePlayerRequest
+    {
+        public Guid UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+    }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(CreatePlayerRequest req)
     {
-        var p = await _playerService.CreatePlayerAsync(req.UserId.ToString(), req.Username);
-        return CreatedAtAction(nameof(GetPlayer), new { playerId = p.Id }, p);
+        var player = await _playerService.CreatePlayerAsync(req.UserId.ToString(), req.Username);
+        return CreatedAtAction(nameof(GetPlayer), new { playerId = player.Id }, player);
     }
 
     public record AdjustValueRequest(int Value);
 
     [HttpPost("{playerId:guid}/experience")]
-    [Authorize(Roles = "Admin")] // manual adjust
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddExperience(Guid playerId, AdjustValueRequest r)
     {
-        var p = await _playerService.AddPlayerExperienceAsync(playerId, r.Value);
-        return Ok(new { p.Id, p.Experience });
+        var player = await _playerService.AddPlayerExperienceAsync(playerId, r.Value);
+        return Ok(new { player.Id, player.Experience });
     }
 
     [HttpPost("{playerId:guid}/mana")]
-    [Authorize(Roles = "Admin")] // manual adjust
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddMana(Guid playerId, AdjustValueRequest r)
     {
-        var p = await _playerService.AddPlayerManaAsync(playerId, r.Value);
-        return Ok(new { p.Id, p.Mana });
+        var player = await _playerService.AddPlayerManaAsync(playerId, r.Value);
+        return Ok(new { player.Id, player.Mana });
     }
 
     [HttpGet("top")]
@@ -68,11 +75,10 @@ public class PlayersController : ControllerBase
         return Ok(list);
     }
 
-    [HttpGet("{playerId:guid}/progress")] 
+    [HttpGet("{playerId:guid}/progress")]
     public async Task<IActionResult> GetProgress(Guid playerId)
     {
-        var prog = await _progressService.GetPlayerOverallProgressAsync(playerId);
-        return Ok(prog);
+        var progress = await _progressService.GetPlayerOverallProgressAsync(playerId);
+        return Ok(progress);
     }
 }
-

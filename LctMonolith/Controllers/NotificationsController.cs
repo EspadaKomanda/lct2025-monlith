@@ -6,9 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LctMonolith.Controllers;
 
-/// <summary>
-/// In-app user notifications API.
-/// </summary>
 [ApiController]
 [Route("api/notifications")]
 [Authorize]
@@ -21,17 +18,18 @@ public class NotificationsController : ControllerBase
         _notifications = notifications;
     }
 
-    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId()
+    {
+        return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
 
-    /// <summary>Get up to 100 unread notifications.</summary>
-    [HttpGet("unread")] 
+    [HttpGet("unread")]
     public async Task<IActionResult> GetUnread(CancellationToken ct)
     {
         var list = await _notifications.GetUnreadAsync(GetUserId(), ct);
         return Ok(list);
     }
 
-    /// <summary>Get recent notifications (paged by take).</summary>
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int take = 100, CancellationToken ct = default)
     {
@@ -39,20 +37,17 @@ public class NotificationsController : ControllerBase
         return Ok(list);
     }
 
-    /// <summary>Mark a notification as read.</summary>
-    [HttpPost("mark/{id:guid}")] 
+    [HttpPost("mark/{id:guid}")]
     public async Task<IActionResult> MarkRead(Guid id, CancellationToken ct)
     {
         await _notifications.MarkReadAsync(GetUserId(), id, ct);
         return NoContent();
     }
 
-    /// <summary>Mark all notifications as read.</summary>
-    [HttpPost("mark-all")] 
+    [HttpPost("mark-all")]
     public async Task<IActionResult> MarkAll(CancellationToken ct)
     {
-        var cnt = await _notifications.MarkAllReadAsync(GetUserId(), ct);
-        return Ok(new { updated = cnt });
+        var updated = await _notifications.MarkAllReadAsync(GetUserId(), ct);
+        return Ok(new { updated });
     }
 }
-

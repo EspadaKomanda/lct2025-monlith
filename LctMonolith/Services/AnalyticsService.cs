@@ -6,13 +6,14 @@ using Serilog;
 
 namespace LctMonolith.Services;
 
-/// <summary>
-/// Provides aggregated analytics metrics for dashboards.
-/// </summary>
 public class AnalyticsService : IAnalyticsService
 {
     private readonly IUnitOfWork _uow;
-    public AnalyticsService(IUnitOfWork uow) => _uow = uow;
+
+    public AnalyticsService(IUnitOfWork uow)
+    {
+        _uow = uow;
+    }
 
     public async Task<AnalyticsSummary> GetSummaryAsync(CancellationToken ct = default)
     {

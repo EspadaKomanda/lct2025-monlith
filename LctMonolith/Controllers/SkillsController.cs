@@ -28,8 +28,12 @@ public class SkillsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id)
     {
-        var s = await _skillService.GetSkillByIdAsync(id);
-        return s == null ? NotFound() : Ok(s);
+        var skill = await _skillService.GetSkillByIdAsync(id);
+        if (skill == null)
+        {
+            return NotFound();
+        }
+        return Ok(skill);
     }
 
     [HttpPost]
@@ -44,19 +48,26 @@ public class SkillsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, CreateSkillDto dto)
     {
-        var s = await _skillService.GetSkillByIdAsync(id);
-        if (s == null) return NotFound();
-        s.Title = dto.Title;
-        await _skillService.UpdateSkillAsync(s);
-        return Ok(s);
+        var skill = await _skillService.GetSkillByIdAsync(id);
+        if (skill == null)
+        {
+            return NotFound();
+        }
+        skill.Title = dto.Title;
+        await _skillService.UpdateSkillAsync(skill);
+        return Ok(skill);
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await _skillService.DeleteSkillAsync(id);
-        return ok ? NoContent() : NotFound();
+        var removed = await _skillService.DeleteSkillAsync(id);
+        if (!removed)
+        {
+            return NotFound();
+        }
+        return NoContent();
     }
 
     [HttpGet("player/{playerId:guid}")]
@@ -76,4 +87,3 @@ public class SkillsController : ControllerBase
         return Ok(new { ps.PlayerId, ps.SkillId, ps.Score });
     }
 }
-

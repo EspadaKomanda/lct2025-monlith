@@ -7,9 +7,6 @@ using LctMonolith.Services.Contracts;
 
 namespace LctMonolith.Services;
 
-/// <summary>
-/// Store purchase operations and inventory management.
-/// </summary>
 public class StoreService : IStoreService
 {
     private readonly IUnitOfWork _uow;
@@ -21,8 +18,15 @@ public class StoreService : IStoreService
 
     public async Task<IEnumerable<StoreItem>> GetActiveItemsAsync(CancellationToken ct = default)
     {
-        try { return await _uow.StoreItems.Query(i => i.IsActive).ToListAsync(ct); }
-        catch (Exception ex) { Log.Error(ex, "GetActiveItemsAsync failed"); throw; }
+        try
+        {
+            return await _uow.StoreItems.Query(i => i.IsActive).ToListAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "GetActiveItemsAsync failed");
+            throw;
+        }
     }
 
     public async Task<UserInventoryItem> PurchaseAsync(Guid userId, Guid itemId, int quantity, CancellationToken ct = default)
@@ -45,7 +49,10 @@ public class StoreService : IStoreService
                 inv = new UserInventoryItem { UserId = userId, StoreItemId = itemId, Quantity = quantity, AcquiredAt = DateTime.UtcNow };
                 await _uow.UserInventoryItems.AddAsync(inv, ct);
             }
-            else inv.Quantity += quantity;
+            else
+            {
+                inv.Quantity += quantity;
+            }
 
             await _uow.Transactions.AddAsync(new Transaction { UserId = userId, StoreItemId = itemId, Type = TransactionType.Purchase, ManaAmount = -totalPrice }, ct);
             await _uow.EventLogs.AddAsync(new EventLog { Type = EventType.ItemPurchased, UserId = userId, Data = JsonSerializer.Serialize(new { itemId, quantity, totalPrice }) }, ct);

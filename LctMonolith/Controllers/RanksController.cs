@@ -30,8 +30,12 @@ public class RanksController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id)
     {
-        var r = await _rankService.GetRankByIdAsync(id);
-        return r == null ? NotFound() : Ok(r);
+        var rank = await _rankService.GetRankByIdAsync(id);
+        if (rank == null)
+        {
+            return NotFound();
+        }
+        return Ok(rank);
     }
 
     [HttpPost]
@@ -46,27 +50,33 @@ public class RanksController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, CreateRankDto dto)
     {
-        var r = await _rankService.GetRankByIdAsync(id);
-        if (r == null) return NotFound();
-        r.Title = dto.Title;
-        r.ExpNeeded = dto.ExpNeeded;
-        await _rankService.UpdateRankAsync(r);
-        return Ok(r);
+        var rank = await _rankService.GetRankByIdAsync(id);
+        if (rank == null)
+        {
+            return NotFound();
+        }
+        rank.Title = dto.Title;
+        rank.ExpNeeded = dto.ExpNeeded;
+        await _rankService.UpdateRankAsync(rank);
+        return Ok(rank);
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await _rankService.DeleteRankAsync(id);
-        return ok ? NoContent() : NotFound();
+        var removed = await _rankService.DeleteRankAsync(id);
+        if (!removed)
+        {
+            return NotFound();
+        }
+        return NoContent();
     }
 
     [HttpGet("validate-advance/{playerId:guid}/{targetRankId:guid}")]
     public async Task<IActionResult> CanAdvance(Guid playerId, Guid targetRankId)
     {
-        var ok = await _ruleValidation.ValidateRankAdvancementRulesAsync(playerId, targetRankId);
-        return Ok(new { playerId, targetRankId, canAdvance = ok });
+        var can = await _ruleValidation.ValidateRankAdvancementRulesAsync(playerId, targetRankId);
+        return Ok(new { playerId, targetRankId, canAdvance = can });
     }
 }
-
