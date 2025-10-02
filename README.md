@@ -43,3 +43,4 @@
 
 ## Ссылки
 - Репозиторий: https://github.com/EspadaKomanda/lct2025-monlith
+
