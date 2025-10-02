@@ -1,0 +1,43 @@
+services:
+  backend:
+    build: LctMonolith
+    ports:
+      - "5000:8080"  # Map port 80 in the container to port 5000 on the host
+    depends_on:
+      - postgres
+      - minio
+      - redis
+
+  frontend:
+    build: Frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=lct2025
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"  # Map PostgreSQL port
+
+  minio:
+    image: minio/minio
+    environment:
+      - MINIO_ACCESS_KEY=myaccesskey
+      - MINIO_SECRET_KEY=mysecretkey
+    ports:
+      - "9000:9000"  # Map MinIO port
+    command: server /data
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"  # Map Redis port
+
+networks:
+  default:
+    driver: bridge
